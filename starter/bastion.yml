@@ -1,0 +1,82 @@
+Description: CD12352 - Infrastructure as Code Project - Udagram - Bastion
+
+Parameters:
+  # Add your parameters here
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+    
+Resources:
+  # CloudFrontDistribution:
+  #   Type: AWS::CloudFront::Distribution
+  #   Properties:
+  #     DistributionConfig:
+  #       Origins:
+  #         - DomainName: my-bucket.s3.amazonaws.com
+  #           Id: MyS3Origin
+  #           S3OriginConfig:
+  #             OriginAccessIdentity: ''
+  #       Enabled: true
+  #       DefaultCacheBehavior:
+  #         TargetOriginId: MyS3Origin
+  #         ForwardedValues:
+  #           QueryString: false
+  #         ViewerProtocolPolicy: redirect-to-https
+  #       DefaultRootObject: index.html
+  #       Comment: CloudFront distribution for my static content
+# EC 2 server as a bastion host
+  Bastion:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: MyKeyPair
+      ImageId: ami-04a81a99f5ec58529
+
+      SecurityGroupIds:
+        - !Ref BastionSecurityGroup
+
+      # Use either any public subnet
+      SubnetId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+
+      # this helps us identify which EC2 instance is the Bastion Host
+      Tags:
+        - Key: Name
+          Value: "Bastion Host"
+
+  # The Security Group of the Bastion Host
+  BastionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow public SSH access to the bastion host
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+      # Allow SSH access to the bastion host
+      # Ideally, set the ip address of your local computer. In this case, though,
+      # let's just allow any ip address.
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+
+  # The Security Group of the WebApp (named `SecurityGroup` in the template)
+  # Add an additional port to its ingress rule so the bastion host may connect into it.
+  # WebAppSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     ...
+  #     SecurityGroupIngress:
+  #     ...
+  #     # Add the following item to allow SSH access from the bastion host
+  #     - IpProtocol: tcp
+  #       FromPort: 22
+  #       ToPort: 22
+  #       SourceSecurityGroupId: !Ref BastionSecurityGroup
+Outputs:
+  BastionHostSecGroup:
+    Description: Security Group of the bastion host
+    Value: !Ref BastionSecurityGroup
+    Export:
+      Name: BastionSG
