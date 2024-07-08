@@ -10,11 +10,12 @@ TODO
 ./run.sh deploy us-east-1 udagram udagram.yml udagram-parameters.json
 ## Tear down instructions
 TODO
-# 1. delete the infrastructure
+# 1. empty the S3 buckets
+# 2. delete the infrastructure
 ./run.sh delete us-east-1 udagram
-# 2. delete bastion server
+# 3. delete bastion server
 ./run.sh delete us-east-1 bastion 
-# 3. delete network components
+# 4. delete network components
 ./run.sh delete us-east-1 network 
 ## Other considerations
 TODO (optional)

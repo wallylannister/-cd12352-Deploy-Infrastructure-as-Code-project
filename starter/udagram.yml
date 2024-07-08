@@ -14,9 +14,12 @@ Resources:
   # Add your resources here
   S3Bucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
     Properties:
       BucketName: !Sub my-bucket-${Environment}
       AccessControl: Private
+      WebsiteConfiguration:
+        IndexDocument: s3.html
       VersioningConfiguration:
         Status: Enabled
       LifecycleConfiguration:
@@ -30,25 +33,36 @@ Resources:
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         IgnorePublicAcls: true
-        BlockPublicPolicy: true
-        RestrictPublicBuckets: true
-
-  MyBucketPolicy:
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+  S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref S3Bucket
       PolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
-          - Sid: AllowCloudFrontServicePrincipal
-            Effect: Allow
-            Principal: "*"
-  #            Service: cloudfront.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub arn:aws:s3:::${S3Bucket}/*
-            # Condition:
-            #   StringEquals:
-            #     AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
+
+  # MyBucketPolicy:
+  #   Type: AWS::S3::BucketPolicy
+  #   Properties:
+  #     Bucket: !Ref S3Bucket
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Sid: AllowCloudFrontServicePrincipal
+  #           Effect: Allow
+  #           Principal: "*"
+  #             Service: cloudfront.amazonaws.com
+  #           Action: s3:GetObject
+  #           Resource: !Sub arn:aws:s3:::${S3Bucket}/*
+  #             Condition:
+  #               StringEquals:
+  #                 AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
   # IAMRole:
   #   Type: AWS::IAM::Role
   #   Properties:
@@ -137,7 +151,7 @@ Resources:
             yum install -y aws-cli
             
             echo "<html><body><h1>It works! Udagram, Udacity Static</h1></body></html>" > /var/www/html/s3.html
-            aws s3 cp /var/www/html/s3.html s3://${S3Bucket}/index.html
+            aws s3 cp /var/www/html/s3.html s3://${S3Bucket}/s3.html
             echo "<html><body><h1>It works! Udagram, Udacity Dynamic</h1></body></html>" > /var/www/html/index.html
         ImageId: ami-0195204d5dce06d99
         KeyName: MyKeyPair
